@@ -1,6 +1,6 @@
 ---
 name: prediction-market-analysis
-description: Use when analyzing Polymarket, Kalshi, or related prediction-market contracts for tradeability, fair odds, bucket selection, contract expression, cross-market comparisons, or Kelly-based sizing. Trigger when the user asks to analyze a specific market, scan a theme or event for opportunities, compare adjacent time buckets or equivalent expressions, decide which contract best fits a thesis, review a past prediction-market trade for direction-vs-timing mistakes, estimate a probability range, reject an over-specific timing market, or size a prediction-market position conservatively.
+description: Use when analyzing Polymarket, Kalshi, or related prediction-market contracts for tradeability, edge, expression selection, market-move diagnosis, structural scans, smart-money signals, account-style reviews, held-position management, timing buckets, or Kelly sizing. Trigger on market URLs, theme scans, adjacent-bucket comparisons, copy-trade questions, historical win-rate/payoff reviews, bankroll-aware sizing, or questions about why a market moved.
 ---
 
 # Prediction Market Analysis
@@ -17,6 +17,7 @@ Default posture:
 - separate direction edge from timing edge
 - prefer the cleaner expression over the more exciting expression
 - size only from conservative edge
+- preserve a proven user style instead of forcing higher-variance trades
 
 ## When to Use
 
@@ -32,6 +33,9 @@ Use this skill when the user wants to:
 - size a position using Kelly or fractional Kelly
 - review a past or proposed trade for bucket-selection, expression, or sizing mistakes
 - re-evaluate a proposed trade in the context of existing exposure
+- analyze a wallet, account, or personal trading history for style, win rate, payoff ratio, or strategy fit
+- judge whether a smart-money, insider, whale, alert-bot, or copy-trade signal is worth following
+- diagnose whether a market move came from hard news, rule reinterpretation, catalyst repricing, or order flow
 
 Do not use this skill for:
 
@@ -47,6 +51,7 @@ Do not use this skill for:
 4. Intervals beat false precision. Always produce a main probability plus a confidence interval.
 5. Conservative Kelly only. Size from the conservative boundary, never the central estimate.
 6. Portfolio-aware by default. A good isolated trade can still be a bad portfolio trade.
+7. Strategy-fit matters. A trade outside the user's proven edge lanes needs a stronger evidence bar and a smaller size.
 
 ## Supported Entry Modes
 
@@ -97,57 +102,23 @@ Use when the input is a past or proposed trade and the goal is to identify wheth
 - sizing
 - execution
 
+### Account Style / Wallet Review
+
+Use when the input is a wallet, account link, trade history, bankroll update, or request to improve a trading style.
+
+Separate closed market-level realized PnL, open mark-to-market PnL, current exposure, win rate, payoff ratio, profit factor, average win/loss, and the strategy lanes where profits actually came from. For Polymarket account review, aggregate by `conditionId` or market slug before quoting win rate, payoff ratio, or realized PnL. See `references/account-style-and-smart-money.md`.
+
+If the user has a high-win-rate / low-payoff profile, do not reflexively recommend buying longer-shot contracts to "improve odds." Prefer preserving the hit-rate edge while reducing average loss through smaller hazardous positions, earlier thesis stop-losses, and better entry discipline.
+
 ## Trade Archetypes
 
-Classify the setup before doing directional work. Every trade must start in exactly one primary bucket:
+Classify every setup into exactly one primary bucket before directional work:
 
-### 1. Resolution Arb
-
-The real-world outcome is already effectively decided, but the market has not fully resolved or repriced yet.
-
-Prioritize:
-
-- rule text
-- oracle / resolution source behavior
-- settlement ambiguity
-- capital lock-up
-- operational tail risk
-
-### 2. Directional Event
-
-The main question is whether an event happens at all, and timing is secondary.
-
-Prioritize:
-
-- event state
-- causal drivers
-- asymmetric evidence
-- best broad expression of the thesis
-
-### 3. Time-Bucket Trade
-
-The main risk is not only whether the event happens, but whether it happens inside a specific window.
-
-Prioritize:
-
-- procedural gates
-- known calendars and lags
-- operational constraints
-- catalysts that narrow timing, not just direction
-
-### 4. Cross-Bucket Structure
-
-The edge comes from comparing nearby contracts that express the same thesis with different clocks, strikes, thresholds, or rule scopes.
-
-Prioritize:
-
-- monotonicity
-- adjacent-bucket pricing
-- calendar ladders
-- rule-scope differences
-- whether the best trade is a different bucket or expression, not the asked contract
-
-If contracts differ in named actors, settlement verbs, or event scope, default to this archetype unless the rule text is otherwise identical apart from the deadline.
+- `resolution arb`: real-world outcome is effectively known; prioritize rule text, oracle behavior, settlement ambiguity, lock-up, and operational tail risk.
+- `directional event`: main question is whether the event happens; prioritize causal drivers and the cleanest broad expression.
+- `time-bucket trade`: main risk is whether the event happens inside this window; require timing-specific evidence.
+- `cross-bucket structure`: edge comes from nearby clocks, strikes, thresholds, or rule scopes; named actors, settlement verbs, or event scope changes make this a rule-scope problem, not a pure timing ladder.
+- `smart-money signal`: thesis comes from a wallet, whale, alert, insider cue, or copy-trade signal; validate wallet history, position size, hedges/ladders, opposing flow, rule fit, and current executable price. See `references/account-style-and-smart-money.md`.
 
 ## Workflow
 
@@ -161,6 +132,8 @@ Extract or infer:
 - settlement time horizon
 - bankroll or position constraints
 - existing portfolio context when provided
+- account-style context when the user provides trade history, wallet data, or a stated bankroll
+- smart-money or copy-trade signal source when it is part of the thesis
 - whether the user is asking for analysis, discovery, or post-trade review
 
 ### 2. Classify the trade archetype
@@ -171,11 +144,13 @@ Decide whether the setup is:
 - `directional event`
 - `time-bucket trade`
 - `cross-bucket structure`
+- `smart-money signal`
 
 Do not analyze a resolution arb like a normal prediction trade.
 Do not analyze a time-bucket trade as if direction alone were sufficient.
 If nearby contracts differ in named actors, settlement verbs, or event scope, treat that as a rule-scope problem before treating it as a pure timing problem.
 If both deadline and rule scope differ, classify as `cross-bucket structure`, not `time-bucket trade`.
+If the user's reason for entry is primarily "a wallet bought this," classify the setup as `smart-money signal` first, then test whether it also qualifies as another archetype.
 
 ### 3. Discover the full expression set
 
@@ -214,26 +189,9 @@ Actively search:
 - quality journalism and specialist reporting
 - market-native signals
 - expert social sources
-- **Grok / `x_search` social overlay** when Hermes has xAI OAuth or `XAI_API_KEY` configured
+- Grok / `x_search` social overlay when Hermes has xAI OAuth or `XAI_API_KEY` configured
 
-#### Grok / X-search overlay for Charles
-
-For Charles's Hermes setup, when the task involves current Polymarket opportunities, market moves, breaking-news catalysts, public figures, crypto launches, politics/geopolitics, AI model releases, or Telegram-forwarded trading signals, run `x_search` in parallel with normal web/source checks whenever the tool is available.
-
-Use Grok as a **discovery and corroboration layer**, not as the final judge:
-- Ask for concrete X posts / threads with URLs and timestamps, not generic narrative.
-- Prefer official handles, eyewitnesses, journalists/domain experts, project/team accounts, and high-signal market participants.
-- Treat influencer calls, anonymous alpha, and engagement-bait as low-quality evidence unless independently corroborated.
-- Map each X claim to: `claim`, `source URL`, `directional implication`, `timing implication`, `rule relevance`, and `evidence quality`.
-- If Grok returns no citations/URLs, do not use the claim in the trade case except as background noise.
-- If X chatter explains a price move but does not alter settlement probability under the rules, classify it as narrative/order-flow, not edge.
-
-Recommended order for live Polymarket work:
-1. Read settlement rule / identify exact child market.
-2. Verify executable CLOB bid/ask/depth.
-3. Use `x_search` for fresh X catalysts and cited posts.
-4. Cross-check rule-relevant claims with official/web sources when possible.
-5. Decide whether the market has underreacted, overreacted, or simply repriced correctly.
+Use Grok as a discovery and corroboration layer, not as the final judge. For Hermes/X-search evidence rows, required fields, source-quality rules, and no-URL handling, read `references/hermes-x-search-evidence.md`.
 
 Use `references/evidence-engine.md` for source tiers, timing-vs-direction evidence, archetype-specific standards, and conflict handling.
 
@@ -296,8 +254,18 @@ Inspect:
 - thematic concentration
 - tail-risk concentration
 - same-calendar clustering
+- strategy-lane concentration against the user's proven strengths and weaknesses
 
 If portfolio context is unavailable, apply the portfolio-blind haircut from `references/probability-and-kelly.md` and say so explicitly.
+
+If the user has a calibrated style history, label the trade as one of:
+
+- `core lane` - matches repeatedly profitable categories or structures
+- `adjacent lane` - related but less proven
+- `hazard lane` - historically loss-prone, noisy, or easy to express in the wrong bucket
+- `lottery lane` - low-probability position whose main value is optionality, not evidence-backed edge
+
+Use this label to adjust evidence bar, sizing, and kill criteria.
 
 ### 11. Size or structure conservatively
 
@@ -330,6 +298,18 @@ Use:
 
 If the best expression is a ladder or split structure rather than a single contract, recommend that instead of forcing a one-line answer.
 
+When a user has a high-win-rate / low-payoff style, size to preserve that style:
+
+- Core lanes can receive normal conservative-Kelly sizing if the edge is independently verified.
+- Adjacent lanes require a strategy-fit haircut.
+- Hazard lanes should usually be observation size unless rule-level evidence is unusually strong.
+- Smart-money-only trades are observation size until the wallet signal is independently confirmed.
+- Lottery lanes should be capped at a small fixed loss the user is comfortable writing to zero.
+
+If the user gives a current bankroll, use that explicit bankroll for concrete sizing. Do not infer bankroll from visible open positions or historical capital unless the user asks for that estimate.
+
+Improving payoff ratio should usually mean cutting losers earlier and entering cleaner expressions, not buying lower-probability long shots.
+
 ### 12. Return a binary verdict
 
 Final verdict must be one of:
@@ -343,16 +323,14 @@ If the asked contract is inferior but a nearby expression is materially better, 
 
 ## Output Format
 
-ALWAYS use this exact structure:
+Select the output mode from the user's request:
 
-Use all eight numbered sections in order, even when the answer is short.
-Do not replace the template with custom headings.
-Do not start with a prose summary before section 1.
-Do not use bold summary headers as substitutes for the numbered template.
-If a field is unavailable, say `not provided`, `unknown`, or `not assessable from prompt` rather than omitting it.
-For every specific market or preferred expression you mention, include a direct market URL when it is available.
+- **Trade Decision**: use the exact eight-section template below and return `TRADE` or `NO TRADE`.
+- **Market-Move Diagnosis**: do not force a trade verdict unless asked; use `Conclusion`, `Facts`, `Price-action interpretation`, `Rule relevance`, `Risks`, and `Confidence`.
+- **Broad Structural Scan**: start with coverage counts, then `TRADE / WATCH / NO TRADE` counts, then a ranked shortlist with direct links, executable edge, depth limits, and false-positive reasons.
+- **Account Style / Wallet Review**: separate realized performance, open exposure, concentration, payoff profile, strategy lanes, and style-calibrated changes.
 
-Before writing any substantive content, first emit the exact eight section headers in order and then fill them.
+For Trade Decision mode, use all eight numbered sections in order, even when the answer is short. Do not start with a prose summary before section 1. If a field is unavailable, say `not provided`, `unknown`, or `not assessable from prompt` rather than omitting it. For every specific market or preferred expression you mention, include a direct market URL when it is available.
 
 ### 1. Verdict
 - `TRADE` or `NO TRADE`
@@ -362,6 +340,7 @@ Before writing any substantive content, first emit the exact eight section heade
 - market title
 - market link
 - trade archetype
+- strategy-fit lane
 - expression / rule-scope differences
 - settlement rule
 - settlement time
@@ -378,6 +357,7 @@ Before writing any substantive content, first emit the exact eight section heade
 ### 4. Evidence Review
 - decisive evidence
 - rule-scope differences
+- smart-money / wallet-signal quality
 - timing-specific evidence
 - directional evidence
 - conflicting evidence
@@ -397,10 +377,12 @@ Before writing any substantive content, first emit the exact eight section heade
 - related existing positions
 - incremental thematic exposure
 - concentration / correlation concerns
+- strategy-fit concerns
 
 ### 7. Sizing
 - raw Kelly
 - conservative Kelly
+- style-calibrated cap
 - preferred structure / ladder
 - final recommended fraction
 - concrete size if bankroll is provided
@@ -450,6 +432,8 @@ Approve only if:
 
 Short-dated `Yes` contracts need a higher bar than short-dated `No` contracts when timing precision is weak.
 
+For geopolitical, military, diplomatic, or crisis markets, short-dated `Yes` needs an especially high bar because narrative tension often does not map cleanly to the contract clock or settlement verb. If the evidence is mostly "something may happen soon," prefer smaller sizing, later buckets, broader expressions, or short-dated `No`.
+
 ### Cross-Bucket Structure
 
 Approve only if:
@@ -460,6 +444,25 @@ Approve only if:
 - the recommendation names which bucket, ladder, or expression is actually preferred
 
 When rule-scope differences are material, the analysis must explicitly say this is not a pure time-bucket comparison.
+
+### Smart-Money Signal
+
+Approve only if:
+
+- the signal wallet has a relevant track record or verifiable reason to be informed
+- the position is not merely a tiny probe relative to the wallet
+- the wallet is not obviously hedged, laddered across incompatible expressions, or already trimming
+- the signal maps to the exact settlement rule and deadline
+- independent real-world evidence supports the same side
+- the entry price after the alert still leaves conservative edge
+
+Reject or cap at observation size if:
+
+- the wallet is new or only visible in this one market
+- several alerts are duplicates of the same wallet or copy-traders
+- the signal is large in absolute terms but not proven to be informed
+- strong opposing flow exists from similarly credible wallets
+- the thesis is mostly narrative tension rather than rule-level evidence
 
 ## Refusal Rules
 
@@ -474,116 +477,23 @@ Return `NO TRADE` if any of the following is true:
 7. The thesis may be right, but the asked contract is the wrong expression.
 8. Timing evidence is too weak for the narrowness of the bucket.
 9. Material rule-scope differences exist but have not been analyzed.
+10. A smart-money signal cannot be validated beyond "a wallet bought this" and no independent edge remains.
+11. The setup falls in a user-specific hazard lane and the requested size is larger than observation size.
 
-## Crypto token-sale commitment threshold markets
+## Domain-Specific References
 
-Use this workflow for markets like `Over $X committed to the <project> public sale?`:
-
-1. Read the rule source first. These markets usually settle from the official sale page, not project fundraising headlines, VC rounds, token FDV, or secondary ICO aggregators.
-2. Separate three quantities that are often confused:
-   - target raise / hardcap (e.g. $2M target)
-   - current total commitments shown on the sale page
-   - Polymarket threshold bucket (e.g. >$4M, >$40M)
-3. Build the full threshold ladder from the parent event and check every child market. Low thresholds may be closed/resolved Yes while higher thresholds remain open and near-zero. Do not infer >$40M from >$2M being true.
-4. Verify executable prices with CLOB `/price` for the exact child market. Search-result snippets and Polymarket page summaries can be stale; Gamma `outcomePrices` are discovery only, and batch endpoints can fail suspiciously.
-5. If the official sale page is Cloudflare-protected or JS-heavy, use layered evidence: official page snippets, browser extraction, project/X announcements, third-party ICO pages, and Polymarket rules. Mark source reliability explicitly.
-6. Treat refund/cancellation/governance events as rule-risk catalysts. A full refund announcement or CEO resignation can mean the final commitment amount remains below thresholds, or that settlement hinges on whether “commitments before refund” vs “final verifiable commitments” count.
-7. For high-probability NO trades, do not let raw Kelly overstate size. The main risks are rule interpretation, oracle discretion, source unavailability, extension clauses, and capital lock-up. Require a much cheaper NO entry than a naive probability model suggests.
-
-## AI model-release / flagship timing markets
-
-Use this workflow for markets like `Will a new Gemini/OpenAI/Claude flagship be released by <date>?`:
-
-1. Read the rule text before reading tech news. These markets often hinge on exact words such as `released`, `made available`, `general public`, `GA`, `preview`, `reasoning-focused`, `flagship`, `Pro`, `Deep Think`, `Ultra`, and exclusions for Flash/Lite/Nano/TTS/embedding/tooling variants.
-2. Build the full sibling time ladder from the parent event. Compare adjacent buckets such as `by May 15`, `by May 22`, `by May 31`, `by Jun 30`. A later bucket near 95% while a near bucket is 50–60% usually means the market believes the event is directionally likely but timing is concentrated around one catalyst window.
-3. For price-move explanations, pull CLOB price history for the Yes token and Data API recent trades. A fast drop may be a mix of official news failing to satisfy rules plus one or two large No/Yes-sell trades breaking thin liquidity.
-4. Treat official changelogs, model docs, launch blogs, model cards, and conference schedules as primary sources. Tech blogs and search snippets are useful for discovery but not enough for settlement-critical claims.
-5. Classify each news item as:
-   - qualifies or likely qualifies under rules (e.g. new Pro/Ultra/Deep Think public release, or existing flagship GA if rules name GA)
-   - directionally relevant but not enough (e.g. I/O promises latest model updates)
-   - explicitly non-qualifying (e.g. Flash/Lite/Nano, TTS, embedding, File Search, webhooks, API schema changes, agent/tooling updates)
-6. Separate `announcement risk` from `availability risk`: a keynote demo or roadmap may move prices but may not resolve Yes if the model is not made available to the required audience.
-7. For `GA`-sensitive markets, verify current launch stage from official docs (`Preview`, `Public preview`, `GA`, `Limited availability`) rather than relying on media headlines saying “released.”
-8. In the final output, say whether the move was caused by hard negative news, lack of expected positive catalyst, rule reinterpretation, adjacent-bucket repricing, or order flow. Include confidence and what future official wording would flip the assessment.
-
-## YouTube / social follower-count threshold ladders
-
-Use this workflow for markets like `Will <creator/channel> hit <N> subscribers/followers by <date>?`:
-
-1. Read the rule clock first. Polymarket event-level `endDate` can differ from the rule text; use the rule sentence such as `June 30, 2026, 11:59 PM ET` as the deadline for all probability math.
-2. Treat sibling thresholds as a **cumulative ladder**, not mutually exclusive buckets. Higher thresholds imply all lower thresholds; do not sum Yes prices as if they partition outcomes.
-3. Anchor on current stock plus required flow:
-   - `needed = threshold - current_count`
-   - `required_daily = needed / days_left`
-   - compare that to recent 7/14/29/30-day subscriber growth.
-4. Prefer primary or settlement-adjacent sources in this order:
-   - official channel page / platform-visible count when extractable
-   - reputable live-count/stat pages with exact current count (e.g. Socialcounts, SocialBlade) as secondary settlement-adjacent data
-   - credible reporting for major milestone confirmation
-   - viral projections or X posts only as low-quality narrative.
-5. Beware rounded history. SocialBlade/Socialcounts daily tables often show counts rounded to whole millions; use them for trend bands, not false exactness. If the page embeds raw app data, extract exact `statistics` arrays / current counter from HTML before relying on snippets.
-6. Build threshold-specific fair probabilities from growth-rate bands, not from one linear projection. Low thresholds whose required daily growth is far below the recent baseline can be near-certain; upper thresholds requiring acceleration should remain wide-interval tail bets.
-7. Inspect CLOB depth for each threshold. These entertainment ladders can have absurd headline spreads and dust top-of-book. Report both headline ask and sweep prices for realistic sizes (e.g. 100/500/1000 shares). Reject an apparent edge if it only exists at dust size.
-8. Choose the cleanest expression: usually the threshold whose required daily growth is comfortably below recent trend but whose Yes price has not already collapsed to ~99c. Avoid overpaying for the upper-tail bucket unless the growth data proves acceleration.
-9. Set path checkpoints. Convert the required daily pace into milestone dates/counts; use those as kill criteria rather than waiting until the final deadline.
-
-## IPO lead-underwriter / lead-left markets
-
-Use this workflow for markets like `Will Goldman Sachs serve as the lead underwriter in SpaceX's IPO?`:
-
-1. Read the rule before interpreting news. These markets often resolve to the **primary lead underwriter / lead-left**, not merely any bank participating as underwriter, bookrunner, or active bookrunner.
-2. Separate three probabilities:
-   - bank is in the underwriting syndicate;
-   - bank is an active/senior bookrunner;
-   - bank is the primary lead / top-listed underwriter under the market rules.
-3. Build the full sibling set and compare all primary-lead candidates plus `Other`. If the rule picks one primary bank, sibling Yes markets are competing expressions even if several banks are called “lead banks” in ordinary reporting.
-4. Use the public S-1/F-1/prospectus cover and underwriting section as the highest-priority source. If hierarchy is unclear, prospectus ordering is often the settlement-relevant tie-breaker.
-5. Treat Reuters/Bloomberg/WSJ statements like `active bookrunners` or `lead banks managing the deal` as syndicate evidence, not automatic primary-lead evidence. Require explicit words such as `lead-left`, `primary lead`, `front-runner`, or a top-listed official filing to push a single bank materially above 50%.
-6. For sharp price moves, inspect CLOB history and recent trades; a thin book plus one large buyer can look like hard news. Do not infer a new fact from price action alone.
-7. Audit expression: if a named bank is overpriced as primary lead, buying that bank's `No` may be cleaner than buying a rival's `Yes`, because it wins under all non-that-bank outcomes.
-8. For detailed pitfalls and the SpaceX/Musk-specific pattern, read `references/ipo-lead-underwriter-markets.md`.
-
-## Crypto launch FDV threshold markets
-
-Use this workflow for markets like `Token FDV above $X one day after launch`:
-
-1. Read the rule clock first. Many contracts settle at a fixed timestamp such as `4:00 PM ET on the calendar day following launch`, not at intraday high. Separate `can spike above threshold` from `can hold above threshold at the rule timestamp`.
-2. Convert the FDV threshold into a token price using total supply: `threshold_price = FDV_threshold / total_supply`. This often makes the question concrete (e.g. $2B FDV with 10B supply = $0.20/token).
-3. Use current premarket/perp/OTC pricing as the live anchor, not old launch-hype articles. Old Hyperliquid or media-implied FDVs can be stale by months.
-4. Grade data sources by liquidity and relevance:
-   - most relevant: current liquid perp/premarket quotes and post-launch spot/CEX data
-   - secondary: DropsTab/CoinGecko/CoinMarketCap aggregators if they expose current premarket price, FDV, and volume
-   - weak/noisy: Whales/OTC quotes with thin fills, old media articles, influencer launch narratives
-   - practical post-launch API anchors when web pages are blocked or JS-heavy:
-     - CoinGecko search: `https://api.coingecko.com/api/v3/search?query=<token-or-project>` to recover the coin id
-     - CoinGecko market data: `https://api.coingecko.com/api/v3/coins/<id>?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false` for price, FDV, total/max supply, circulating supply, and 24h volume
-     - CoinMarketCap public data API if CMC page extraction fails: `https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail?id=<cmc_id>` for statistics, FDV, supply, 24h high/low/change; and `https://api.coinmarketcap.com/data-api/v3/cryptocurrency/market-pairs/latest?slug=<slug>&start=1&limit=10&category=spot&centerType=all&sort=cmc_rank_advanced` for exchange-level prices/volumes/depth
-     - Binance spot book ticker, when listed: `https://api.binance.com/api/v3/ticker/bookTicker?symbol=<SYMBOL>USDT` as a live CEX cross-check; retry if the first SSL attempt fails
-5. Compare nearby strike buckets for internal coherence and execution. FDV ladders can have very wide CLOB spreads, so use executable bid/ask and reject apparent edge that exists only at midpoint.
-6. Explicitly price unlock / public-sale sell pressure. Public sale FDV and ROI matter: if the threshold is far above public sale cost basis, first-day sellers may cap the move even when the project is high quality.
-7. Preferred output: fair interval for the threshold, max Yes entry / minimum No entry, and a clear note that the opposite side may still be no-trade if the edge is inside the spread.
+Read the relevant reference only when the market type requires it:
+- Core references: `references/evidence-engine.md`, `references/probability-and-kelly.md`, `references/domain-adapters.md`, and `references/research-and-open-source.md`.
+- Account / signal references: `references/account-style-and-smart-money.md` and `references/hermes-x-search-evidence.md`.
+- Scan references: `references/structural-scan-arb.md` and `references/polymarket-broad-scan-2026-05-16.md`.
+- Domain references: `references/ai-model-release-markets.md`, `references/crypto-token-sale-thresholds.md`, `references/crypto-fdv-launch-markets.md`, `references/youtube-subscriber-thresholds.md`, and `references/ipo-lead-underwriter-markets.md`.
 
 ## Common Mistakes
 
-- Treating a large volume of low-quality evidence as strong conviction.
-- Treating market price as literal truth instead of one input.
+- Treating low-quality evidence volume, market price, or midpoint paper edge as tradeable conviction.
 - Confusing "event probably happens" with "event happens inside this exact clock."
-- Treating contracts with different named actors or settlement verbs as if they were only different time buckets.
-- Paying for timing precision the evidence does not justify.
-- Evaluating a resolution arb like a normal prediction trade.
-- Using the central estimate for Kelly sizing.
-- Ignoring existing correlated exposure across the same narrative cluster.
-- Calling theoretical edge a real edge when execution destroys it.
-- In crypto FDV launch markets, treating an old premarket peak or launch-day spike thesis as enough evidence for a fixed next-day settlement timestamp.
-- In AI model-release markets, confusing “company will announce a major model update” with “the update satisfies the exact model name/version required by the rules.” Always audit naming clauses, successor language, exclusions for higher major versions, public-access requirements, and whether product-family variants (Flash, Lite, Deep Think, TTS, robotics, etc.) count. A bullish conference/update thesis can still be bearish for a contract that specifically requires a mid-cycle version such as `3.5` while excluding `4`.
-
-## References
-
-- Read `references/evidence-engine.md` when grading sources, separating timing from direction, or evaluating a resolution arb.
-- Read `references/probability-and-kelly.md` before generating intervals, choosing the best expression, pricing edge, or sizing a trade.
-- Read `references/domain-adapters.md` when the market falls into politics/macro, crypto, or sports.
-- Read `references/youtube-subscriber-thresholds.md` for YouTube/social follower-count threshold ladders, exact-count extraction notes, growth-rate modeling, and depth checks.
-- Read `references/ipo-lead-underwriter-markets.md` for IPO lead-underwriter / lead-left markets, active-bookrunner vs primary-lead distinctions, and SpaceX/Musk-specific pitfalls.
-- Read `references/research-and-open-source.md` when you need the research foundation or design rationale behind this skill.
-- Read `references/structural-scan-arb.md` when scanning many markets for structural edge, arbitrage-like strips, stale markets, threshold/time ladder anomalies, or `edge >= X` opportunities.
-- Read `references/polymarket-broad-scan-2026-05-16.md` for Charles-specific lessons from a cross-category `edge >= 10` scan: binary-outcome filtering, HIGH/LOW `hit` parsing, date/number extraction pitfalls, candidate filing-deadline/Other checks, and examples of false-positive strips.
+- Treating rule-scope differences as pure time buckets.
+- Evaluating resolution arbs like normal forecasts.
+- Sizing from central probability rather than the conservative interval boundary.
+- Ignoring correlated exposure, strategy-fit hazards, or execution depth.
+- Letting smart-money alerts, old crypto launch hype, or AI product-news headlines substitute for rule-relevant evidence.

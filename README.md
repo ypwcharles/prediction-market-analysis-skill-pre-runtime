@@ -7,10 +7,11 @@ This repository contains a reusable skill for analyzing prediction markets such 
 ## What it does
 
 - Supports both single-market analysis and theme-driven market discovery.
+- Supports market-move diagnosis, broad structural scans, account-style review, and smart-money signal triage.
 - Forces evidence grading instead of narrative accumulation.
 - Compares fair value with executable prices after fees and slippage.
-- Incorporates portfolio overlap before final sizing.
-- Outputs only `TRADE` or `NO TRADE`, never a vague middle state.
+- Incorporates portfolio overlap and strategy-fit before final sizing.
+- Outputs `TRADE` or `NO TRADE` for trade decisions; diagnostic and scan modes use mode-specific formats.
 
 ## What it does not do
 
@@ -18,15 +19,16 @@ This repository contains a reusable skill for analyzing prediction markets such 
 - It does not auto-execute orders.
 - It does not assume market price is literal truth.
 - It does not size from the central estimate when uncertainty is material.
+- It does not include the runtime.v1 / JSON-only alert-bot contract; this repo is the pre-runtime interactive skill.
 
 ## Repository structure
 
 - `skills/prediction-market-analysis/SKILL.md`
   Main skill entrypoint and workflow.
 - `skills/prediction-market-analysis/references/`
-  Detailed reference documents for evidence grading, probability/Kelly, domain adapters, and research foundations.
+  Detailed reference documents for evidence grading, probability/Kelly, domain adapters, Hermes/X-search evidence, structural scans, account-style review, and market-specific playbooks.
 - `evals/evals.json`
-  Early benchmark prompts for baseline vs with-skill comparisons.
+  Benchmark prompts for timing buckets, resolution arbs, portfolio concentration, market-move diagnosis, structural-scan false positives, smart-money signals, account-style review, X-search evidence handling, and domain-specific ladders.
 - `docs/superpowers/specs/`
   Design specification.
 - `docs/superpowers/plans/`

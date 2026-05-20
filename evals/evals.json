@@ -48,6 +48,102 @@
         "The output names the rule-scope differences between the two contracts.",
         "The output does not treat the pair as a pure time-bucket ladder."
       ]
+    },
+    {
+      "id": 5,
+      "prompt": "为什么这个 Polymarket 市场 Yes 从 62 跌到 38？请只诊断市场为什么动，不要给我完整交易建议。",
+      "expected_output": "The response uses Market-Move Diagnosis mode, explains hard news versus order flow versus rule relevance, and does not force a TRADE/NO TRADE verdict.",
+      "files": [],
+      "expectations": [
+        "The output does not use the eight-section trade template.",
+        "The output separates hard news, rule relevance, adjacent-bucket repricing, and order flow.",
+        "The output includes confidence or uncertainty.",
+        "The output does not force a trade verdict unless asked."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "帮我做一个 Polymarket broad structural scan，找 edge >= 10c 的机会。发现某个候选的所有 outcome Yes ask 加起来是 118c，这是不是套利？",
+      "expected_output": "The response treats ask-sum-over-100 as taker spread / market-making context, not riskless arb, and reports broad-scan coverage plus TRADE/WATCH/NO TRADE buckets.",
+      "files": [],
+      "expectations": [
+        "The output uses broad-scan structure, not a full deep dive for every false positive.",
+        "The output rejects ask-sum-over-100 as a taker arbitrage.",
+        "The output distinguishes executable edge from paper or midpoint edge.",
+        "The output mentions depth or size limits."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "某个竞选市场 active outcomes 的 Yes ask 加起来只有 82c，我想买全部 active Yes。还有 inactive Other，filing deadline 也没过。请判断。",
+      "expected_output": "The response flags incomplete outcome coverage, inactive Other, and filing-deadline risk, returning WATCH or NO TRADE rather than treating it as a full-set strip arbitrage.",
+      "files": [],
+      "expectations": [
+        "The output checks whether active outcomes are exhaustive.",
+        "The output treats inactive Other / another person as a gating issue.",
+        "The output checks filing deadline status.",
+        "The output rejects or downgrades the strip if completeness is unresolved."
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "PolyBeats 提示某个钱包重仓买了一个 AI release 市场。我只知道钱包买了，没有历史胜率。可以买 8% 仓位吗？",
+      "expected_output": "The response classifies the setup as smart-money signal, requires wallet-history and independent evidence, and caps any unvalidated signal at observation size.",
+      "files": [],
+      "expectations": [
+        "The output labels or treats the setup as smart-money signal.",
+        "The output asks whether the wallet has relevant track record or hedge/ladder context.",
+        "The output requires rule fit and independent evidence.",
+        "The output rejects an 8% conviction position or caps it at observation size."
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "这是我的个人 Polymarket 账户，历史胜率很高但赔率很低。请根据交易风格给改进建议，不要简单建议我多买长赔率。",
+      "expected_output": "The response uses account-style review, separates realized and open PnL concepts, identifies strategy lanes, and improves payoff ratio via loss control and expression quality rather than long-shot chasing.",
+      "files": [],
+      "expectations": [
+        "The output separates closed PnL from open mark-to-market exposure.",
+        "The output discusses win rate and payoff ratio.",
+        "The output labels core/adjacent/hazard/lottery lanes or equivalent strategy-fit concepts.",
+        "The output does not recommend long shots as the primary fix."
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "用 Grok/x_search 找到了一个 X 帖子说某 AI 模型明天公开发布，但没有链接和时间戳。这个能作为下注依据吗？",
+      "expected_output": "The response treats no-URL X evidence as a search lead or background noise only, requiring cited posts and official corroboration before using it in the trade case.",
+      "files": [],
+      "expectations": [
+        "The output says no-URL Grok/X claims cannot be decisive evidence.",
+        "The output requires URL and timestamp for social evidence.",
+        "The output maps the claim to rule relevance and timing relevance before using it.",
+        "The output asks for official or high-quality corroboration."
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "MrBeast 6月30日前达到 500M subscribers 的 Yes 还能买吗？请比较 494M、497M、500M 阈值。",
+      "expected_output": "The response treats thresholds as a cumulative ladder, computes required daily pace for each threshold, checks exact rule clock, and warns about CLOB depth/spread.",
+      "files": [],
+      "expectations": [
+        "The output does not treat sibling thresholds as mutually exclusive outcomes.",
+        "The output computes or asks for current count, needed count, days left, and required daily pace.",
+        "The output compares thresholds as expressions of the thesis.",
+        "The output discusses executable depth or spread."
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "Reuters 说 Goldman、Morgan Stanley、JPM 都是 SpaceX IPO active bookrunners。那 Goldman lead underwriter Yes 是不是大于 70%？",
+      "expected_output": "The response separates syndicate participation from primary lead / lead-left probability and does not treat active bookrunner status as enough to price a single bank above 70%.",
+      "files": [],
+      "expectations": [
+        "The output distinguishes active bookrunner from lead-left / primary lead.",
+        "The output asks for or references sibling candidates and Other.",
+        "The output treats prospectus ordering as the best settlement evidence.",
+        "The output does not automatically assign >70% to Goldman from active-bookrunner evidence alone."
+      ]
     }
   ]
 }
