@@ -144,6 +144,21 @@
         "The output treats prospectus ordering as the best settlement evidence.",
         "The output does not automatically assign >70% to Goldman from active-bookrunner evidence alone."
       ]
+    },
+    {
+      "id": 13,
+      "prompt": "Polymarket 市场：Best Chinese AI Company end of May? 规则说按 LMArena Text Arena Overall、style control off、5月31日12pm ET 检查。当前 Alibaba Qwen3.7-Max-Preview 1475±10、rank 8、votes 3741，Baidu ERNIE-5.1 1472±7、rank 10、votes 9004。阿里的领先优势有多大？75c 可以买吗？",
+      "expected_output": "The response treats this as an AI leaderboard-ranking market, not a general AI-company thesis; verifies the exact leaderboard variant and check time; quantifies rank gap, score gap, uncertainty overlap, vote/preliminary risk, and executable price; and avoids calling a thin preliminary lead safe.",
+      "files": [
+        "skills/prediction-market-analysis/references/ai-leaderboard-ranking-markets.md"
+      ],
+      "expectations": [
+        "The output identifies the exact source variant: LMArena Text Arena Overall with style control off / no-style-control.",
+        "The output separates model-level rank from company-level outcome and notes Alibaba's backup-model buffer if relevant.",
+        "The output quantifies lead quality using rank gap, score gap, uncertainty overlap, votes, and preliminary status.",
+        "The output compares the lead quality with executable market price and does not treat a 3-point preliminary lead as settlement-safe.",
+        "The output distinguishes leaderboard-rule edge from broad views on Chinese AI company fundamentals."
+      ]
     }
   ]
 }

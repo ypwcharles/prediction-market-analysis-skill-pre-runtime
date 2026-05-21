@@ -26,9 +26,9 @@ This repository contains a reusable skill for analyzing prediction markets such 
 - `skills/prediction-market-analysis/SKILL.md`
   Main skill entrypoint and workflow.
 - `skills/prediction-market-analysis/references/`
-  Detailed reference documents for evidence grading, probability/Kelly, domain adapters, Hermes/X-search evidence, structural scans, account-style review, and market-specific playbooks.
+  Detailed reference documents for evidence grading, probability/Kelly, domain adapters, Hermes/X-search evidence, structural scans, account-style review, AI release/leaderboard markets, and other market-specific playbooks.
 - `evals/evals.json`
-  Benchmark prompts for timing buckets, resolution arbs, portfolio concentration, market-move diagnosis, structural-scan false positives, smart-money signals, account-style review, X-search evidence handling, and domain-specific ladders.
+  Benchmark prompts for timing buckets, resolution arbs, portfolio concentration, market-move diagnosis, structural-scan false positives, smart-money signals, account-style review, X-search evidence handling, AI leaderboard markets, and domain-specific ladders.
 - `docs/superpowers/specs/`
   Design specification.
 - `docs/superpowers/plans/`

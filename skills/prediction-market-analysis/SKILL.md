@@ -1,6 +1,6 @@
 ---
 name: prediction-market-analysis
-description: Use when analyzing Polymarket, Kalshi, or related prediction-market contracts for tradeability, edge, expression selection, market-move diagnosis, structural scans, smart-money signals, account-style reviews, held-position management, timing buckets, or Kelly sizing. Trigger on market URLs, theme scans, adjacent-bucket comparisons, copy-trade questions, historical win-rate/payoff reviews, bankroll-aware sizing, or questions about why a market moved.
+description: Use when analyzing Polymarket, Kalshi, or related prediction-market contracts for tradeability, edge, expression selection, market-move diagnosis, structural scans, smart-money signals, account-style reviews, held-position management, timing buckets, benchmark/leaderboard-rank markets, or Kelly sizing. Trigger on market URLs, theme scans, adjacent-bucket comparisons, copy-trade questions, historical win-rate/payoff reviews, bankroll-aware sizing, or questions about why a market moved.
 ---
 
 # Prediction Market Analysis
@@ -24,6 +24,7 @@ Default posture:
 Use this skill when the user wants to:
 
 - analyze a specific Polymarket or Kalshi market
+- analyze benchmark / leaderboard-rank markets where settlement depends on a specific table, tab, or score source
 - search a theme or event for tradeable markets
 - compare related contracts across platforms
 - compare adjacent time buckets, strike levels, or mutually exclusive outcomes
@@ -486,7 +487,7 @@ Read the relevant reference only when the market type requires it:
 - Core references: `references/evidence-engine.md`, `references/probability-and-kelly.md`, `references/domain-adapters.md`, and `references/research-and-open-source.md`.
 - Account / signal references: `references/account-style-and-smart-money.md` and `references/hermes-x-search-evidence.md`.
 - Scan references: `references/structural-scan-arb.md` and `references/polymarket-broad-scan-2026-05-16.md`.
-- Domain references: `references/ai-model-release-markets.md`, `references/crypto-token-sale-thresholds.md`, `references/crypto-fdv-launch-markets.md`, `references/youtube-subscriber-thresholds.md`, and `references/ipo-lead-underwriter-markets.md`.
+- Domain references: `references/ai-model-release-markets.md`, `references/ai-leaderboard-ranking-markets.md`, `references/crypto-token-sale-thresholds.md`, `references/crypto-fdv-launch-markets.md`, `references/youtube-subscriber-thresholds.md`, and `references/ipo-lead-underwriter-markets.md`.
 
 ## Common Mistakes
 
@@ -496,4 +497,5 @@ Read the relevant reference only when the market type requires it:
 - Evaluating resolution arbs like normal forecasts.
 - Sizing from central probability rather than the conservative interval boundary.
 - Ignoring correlated exposure, strategy-fit hazards, or execution depth.
-- Letting smart-money alerts, old crypto launch hype, or AI product-news headlines substitute for rule-relevant evidence.
+- Letting smart-money alerts, old crypto launch hype, AI product-news headlines, or model-provider press releases substitute for rule-relevant evidence.
+- In AI leaderboard markets, confusing the default leaderboard with the exact arena/category/style-control variant named in the rules, or calling a thin preliminary score lead "safe" without checking uncertainty, vote count, and model-addition risk.
